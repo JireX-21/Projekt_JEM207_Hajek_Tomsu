@@ -81,6 +81,8 @@ st.pyplot(fig)
 
 #Show/Movie finder
 
+st.title("Movie recommender")
+
 type = st.radio("Select type: ", ('TV Show', 'Movie'))
 
 countries = st.multiselect("Countries: ",
