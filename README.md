@@ -11,9 +11,9 @@ We obtained our dataset from https://www.kaggle.com/datasets/ariyoomotade/netfli
 
 
 ```
-│ main.py                             # main script
-│ website.py                          # final application with data visualization and movie recommender; final product
-│ README.md                           # guide to our project code and structure
+│ main.py                         # main script
+│ website.py                      # final application with data visualization and movie recommender; final product
+│ README.md                       # guide to our project code and structure
 │
 │
 └───data                              
