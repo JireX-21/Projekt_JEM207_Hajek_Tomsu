@@ -10,16 +10,16 @@ We obtained our dataset from https://www.kaggle.com/datasets/ariyoomotade/netfli
 ## Project structure
 
 
-. . .
-| main.py
-| website.py
-| README.md
-|
-|
-|-----data
-        |-----netflix_titles.csv
-        |-----proccessed_data.csv
-
+```
+│ main.py                             # main script
+│ website.py                          # final application with data visualization and movie recommender; final product
+│ README.md                           # guide to our project code and structure
+│
+│
+└───data                              
+    ├───netflix_titles.csv        # raw dataset
+    ├───proccessed_data.csv       # final dataset
+```
 
 ## Arguments
 
