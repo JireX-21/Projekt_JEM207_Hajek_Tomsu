@@ -11,10 +11,10 @@ We obtained our dataset from https://www.kaggle.com/datasets/ariyoomotade/netfli
 
 
 ```
-│ main.py                         # main script
+│ main.ipynb                      # main script
 │ website.py                      # final application with data visualization and movie recommender; final product
 │ README.md                       # guide to our project code and structure
-│
+│ requirements.txt                # requirements
 │
 └───data                              
     ├───netflix_titles.csv        # raw dataset

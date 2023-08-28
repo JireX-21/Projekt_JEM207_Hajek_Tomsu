@@ -4,10 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 import geopandas as gpd
+import requests
+from googleapiclient.discovery import build
 
 st.title("Netflix data project JEM207 by Hajek and Tomsu")
 
-data = pd.read_csv("proccessed_data.csv")
+data = pd.read_csv("data/proccessed_data.csv")
 
 #Graph
 st.subheader("Distribution of Content Types")
@@ -22,8 +24,12 @@ ax.set_title('Distribution of Content Types')
 st.pyplot(fig)
 
 # Graph
-movies = data[data['type'] == 'Movie']
-tv_shows = data[data['type'] == 'TV Show']
+def filter_by_type(df, content_type):
+    filtered_data = df[df['type'] == content_type]
+    return filtered_data
+
+movies = filter_by_type(data,'Movie')
+tv_shows = filter_by_type(data,'TV Show')
 
 st.subheader('Distribution of Movies and TV Shows by Release Year')
 
@@ -45,8 +51,8 @@ current_year = datetime.datetime.now().year
 
 filtered_df = data[(data['release_year'] >= 2000) & (data['release_year'] <= current_year)]
 
-movie_counts = filtered_df[filtered_df['type'] == 'Movie']['release_year'].value_counts().sort_index()
-tv_show_counts = filtered_df[filtered_df['type'] == 'TV Show']['release_year'].value_counts().sort_index()
+movie_counts = filter_by_type(filtered_df,'Movie')['release_year'].value_counts().sort_index()
+tv_show_counts = filter_by_type(filtered_df,'TV Show')['release_year'].value_counts().sort_index()
 
 st.subheader('Distribution of Movies and TV Shows by Release Year (2000 - {})'.format(current_year))
 
@@ -81,22 +87,40 @@ st.pyplot(fig)
 
 #Show/Movie finder
 
+def filter_by_type(df, content_type):
+    filtered_data = df[df['type'] == content_type]
+    return filtered_data
+
+def extract_unique_column(df, genre_column):
+    unique_column = set()
+    for genres in df[genre_column]:
+        unique_column.update(genre.strip() for genre in genres.split(','))
+    return unique_column
+
+unique_countries = extract_unique_column(data,'country')
+unique_countries_list = sorted(list(unique_countries))
+
+movie_data = filter_by_type(data,'Movie')
+unique_genres = extract_unique_column(movie_data,'genre')
+unique_movie_list = list(unique_genres)
+
+movie_data = filter_by_type(data,'TV Show')
+unique_genres = extract_unique_column(movie_data,'genre')
+unique_show_list = list(unique_genres)
+
 st.title("Movie recommender")
 
 type = st.radio("Select type: ", ('TV Show', 'Movie'))
 
-countries = st.multiselect("Countries: ",
-                     ['Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bangladesh', 'Belarus', 'Belgium', 'Bermuda', 'Botswana', 'Brazil', 'Bulgaria', 'Burkina Faso', 'Cambodia', 'Cameroon', 'Canada', 'Cayman Islands', 'Chile', 'China', 'Colombia', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Dominican Republic', 'East Germany', 'Ecuador', 'Egypt', 'Ethiopia', 'Finland', 'France', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Guatemala', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kuwait', 'Latvia', 'Lebanon', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Malawi', 'Malaysia', 'Malta', 'Mauritius', 'Mexico', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Namibia', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Nigeria', 'Norway', 'Pakistan', 'Palestine', 'Panama', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Romania', 'Russia', 'Samoa', 'Saudi Arabia', 'Senegal', 'Serbia', 'Singapore', 'Slovakia', 'Slovenia', 'Somalia', 'South Africa', 'South Korea', 'Soviet Union', 'Spain', 'Sri Lanka', 'Sudan', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Thailand', 'Turkey', 'Uganda', 'Uknown', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Vatican City', 'Venezuela', 'Vietnam', 'West Germany', 'Zimbabwe'])
+countries = st.multiselect("Countries: ", unique_countries_list)
 
 year_interval = st.multiselect("Year interval: ",
                          ['1971-1980', '1981-1990', '1991-2000','2001-2010','2011-2020','2021-2030'])
 
 if (type == "Movie"):
-    genre = st.multiselect("Genre: ", 
-                         ['Classic Movies', 'Action & Adventure', 'Documentaries', 'Comedies', 'Stand-Up Comedy', 'Faith & Spirituality', 'Horror Movies', 'Anime Features', 'Cult Movies', 'Dramas', 'Music & Musicals', 'LGBTQ Movies', 'Thrillers', 'Children & Family Movies', 'International Movies', 'Sports Movies', 'Romantic Movies', 'Sci-Fi & Fantasy', 'Movies', 'Independent Movies'])
+    genre = st.multiselect("Genre: ", unique_movie_list)
 else:
-   genre = st.multiselect("Genre: ", 
-                         ['Classic & Cult TV', 'TV Mysteries', 'Docuseries', "Kids' TV", 'Crime TV Shows', 'Teen TV Shows', 'Romantic TV Shows', 'Science & Nature TV', 'TV Dramas', 'Reality TV', 'TV Action & Adventure', 'TV Shows', 'Korean TV Shows', 'Anime Series', 'TV Thrillers', 'Stand-Up Comedy & Talk Shows', 'TV Sci-Fi & Fantasy', 'TV Comedies', 'Spanish-Language TV Shows', 'International TV Shows', 'TV Horror', 'British TV Shows']) 
+   genre = st.multiselect("Genre: ", unique_show_list)
 
 
 filtered_films = data[
@@ -114,3 +138,31 @@ if not filtered_films.empty:
 else:
     st.write("No films match the selected criteria.")
 
+#API trailer
+
+YOUTUBE_API_KEY = 'AIzaSyC1B88tLVdxV6ocVAo4smCkLtDfapxeHck'
+
+def search_movie_trailer(movie_title):
+    youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+    search_response = youtube.search().list(
+        q=f'{movie_title} trailer',
+        type='video',
+        part='id',
+        maxResults=1
+    ).execute()
+
+    if 'items' in search_response:
+        video_id = search_response['items'][0]['id']['videoId']
+        return f'https://www.youtube.com/watch?v={video_id}'
+    else:
+        return None
+
+st.title("Film Trailer")
+
+movie_title = st.text_input("Enter Movie Title:")
+if st.button("Search Trailer"):
+    trailer_url = search_movie_trailer(movie_title)
+    if trailer_url:
+        st.video(trailer_url)
+    else:
+        st.write("Trailer not found.")
