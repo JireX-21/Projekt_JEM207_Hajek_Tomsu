@@ -7,12 +7,12 @@ import geopandas as gpd
 import requests
 from googleapiclient.discovery import build
 
-st.title("Netflix data project JEM207 by Hajek and Tomsu")
+st.title('Netflix data project JEM207 by Hajek and Tomsu')
 
-data = pd.read_csv("data/proccessed_data.csv")
+data = pd.read_csv('data/proccessed_data.csv')
 
 #Graph
-st.subheader("Distribution of Content Types")
+st.subheader('Distribution of Content Types')
 content_counts = data['type'].value_counts()
 
 fig, ax = plt.subplots()
@@ -85,7 +85,31 @@ ax.set_axis_off()
 
 st.pyplot(fig)
 
+#Function for visualizating frequency of different features
+def most_casted_actors(data, column, top_n=10):
+    data[column] = data[column].fillna('')
+
+    actor_counts = {}
+
+    for row in data[column]:
+        for actor in row.split(','):
+            actor = actor.strip()
+            if actor and actor != 'Unknown':
+                if actor in actor_counts:
+                    actor_counts[actor] += 1
+                else:
+                    actor_counts[actor] = 1
+
+    sorted_actors = sorted(actor_counts.items(), key=lambda x: x[1], reverse=True)
+
+    top_n_actors = sorted_actors[:top_n]
+
+    return top_n_actors
+
 #Show/Movie finder
+
+data['country'] = data['country'].astype(str)
+data['cast'] = data['cast'].astype(str)
 
 def filter_by_type(df, content_type):
     filtered_data = df[df['type'] == content_type]
@@ -108,19 +132,19 @@ movie_data = filter_by_type(data,'TV Show')
 unique_genres = extract_unique_column(movie_data,'genre')
 unique_show_list = list(unique_genres)
 
-st.title("Movie recommender")
+st.title('Movie recommender')
 
-type = st.radio("Select type: ", ('TV Show', 'Movie'))
+type = st.radio('Select type: ', ('TV Show', 'Movie'))
 
-countries = st.multiselect("Countries: ", unique_countries_list)
+countries = st.multiselect('Countries: ', unique_countries_list)
 
-year_interval = st.multiselect("Year interval: ",
+year_interval = st.multiselect('Year interval: ',
                          ['1971-1980', '1981-1990', '1991-2000','2001-2010','2011-2020','2021-2030'])
 
-if (type == "Movie"):
-    genre = st.multiselect("Genre: ", unique_movie_list)
+if (type == 'Movie'):
+    genre = st.multiselect('Genre: ', unique_movie_list)
 else:
-   genre = st.multiselect("Genre: ", unique_show_list)
+   genre = st.multiselect('Genre: ', unique_show_list)
 
 
 filtered_films = data[
@@ -136,11 +160,11 @@ filtered_films = filtered_films[
 if not filtered_films.empty:
     st.table(filtered_films[['title', 'release_year', 'country', 'genre']])
 else:
-    st.write("No films match the selected criteria.")
+    st.write('No films match the selected criteria.')
 
 #API trailer
 
-YOUTUBE_API_KEY = 'AIzaSyC1B88tLVdxV6ocVAo4smCkLtDfapxeHck'
+YOUTUBE_API_KEY = ''
 
 def search_movie_trailer(movie_title):
     youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
@@ -157,12 +181,51 @@ def search_movie_trailer(movie_title):
     else:
         return None
 
-st.title("Film Trailer")
+st.title('Film Trailer')
 
-movie_title = st.text_input("Enter Movie Title:")
-if st.button("Search Trailer"):
+movie_title = st.text_input('Enter Movie Title:')
+if st.button('Search Trailer'):
     trailer_url = search_movie_trailer(movie_title)
     if trailer_url:
         st.video(trailer_url)
     else:
-        st.write("Trailer not found.")
+        st.write('Trailer not found.')
+
+#TOP actors
+st.title('Top Actors on Netflix')
+
+data_2 = most_casted_actors(data, 'cast')
+genres, counts = zip(*data_2)
+
+plt.figure(figsize=(10, 6))
+plt.barh(genres, counts, color='#007cb9')
+plt.xlabel('Count')
+plt.title('Top Actors on Netflix')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+
+st.pyplot(plt)
+
+#TOP genres
+st.title('Top Genres on Netflix')
+
+selected_type = st.selectbox('Select Type', ['All', 'Movie', 'TV Show'])
+
+if selected_type == 'Movie':
+    filtered_data = data[data['type'] == 'Movie']
+elif selected_type == 'TV Show':
+    filtered_data = data[data['type'] == 'TV Show']
+else:
+    filtered_data = data
+
+data = most_casted_actors(filtered_data, 'genre')
+genres, counts = zip(*data)
+
+plt.figure(figsize=(10, 6))
+plt.barh(genres, counts, color='#007cb9')
+plt.xlabel('Count')
+plt.title('Top Genres on Netflix')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+
+st.pyplot(plt)

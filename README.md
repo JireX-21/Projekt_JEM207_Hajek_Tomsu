@@ -2,7 +2,7 @@
 This is a repository for our Data Processing in Python project. Collaborative work of Jiří Hájek and Vojtěch Tomšů.
 # Netflix cinematographics database analysis + movie recommendation application
 
-First part of our code is dedicated to work with data, cleaning and inspecting it. Then, we proceed in deeper analysis and visualization and third part of our work is program, that recommends user a movie based on the inputs given by the user.
+First part of our code is dedicated to work with data, cleaning and inspecting it. Then, we proceed in deeper analysis and visualization and third part of our work is program, that recommends user a movie based on the inputs given by the user. After a movie is recommended, user can watch trailer of it directly on our streamlit website, without the need of leaving it, as we use API request to import the trailer from Youtube. 
 
 We obtained our dataset from https://www.kaggle.com/datasets/ariyoomotade/netflix-data-cleaning-analysis-and-visualization?datasetId=2437124&sortBy=voteCount - here is brief introduction to it: 
     Netflix is a popular streaming service that offers a vast catalog of movies, TV shows, and original contents. This dataset is a cleaned version of the original version which can be found here. The data consist of contents added to Netflix from 2008 to 2021. The oldest content is as old as 1925 and the newest as 2021.
