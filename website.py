@@ -6,6 +6,8 @@ import datetime
 import geopandas as gpd
 import requests
 from googleapiclient.discovery import build
+import os
+from dotenv import load_dotenv
 
 st.title('Netflix data project JEM207 by Hajek and Tomsu')
 
@@ -164,7 +166,8 @@ else:
 
 #API trailer
 
-YOUTUBE_API_KEY = ''
+load_dotenv()
+YOUTUBE_API_KEY = os.environ.get('API_KEY')
 
 def search_movie_trailer(movie_title):
     youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
